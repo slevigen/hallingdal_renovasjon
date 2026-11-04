@@ -1,0 +1,67 @@
+[project]
+name = "hallingdal_renovasjon"
+version = "0.1.0"
+description = "Home Assistant integration for the Hallingdal Renovasjon waste collection schedule"
+requires-python = ">=3.14"
+
+[dependency-groups]
+dev = [
+  "pytest-homeassistant-custom-component==0.13.375",
+  "aioresponses==0.7.9",
+  "ruff",
+  "mypy",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "ANN401",  # raw JSON payloads are Any
+  "CPY001",  # no per-file copyright headers
+  "COM812",  # conflicts with the formatter
+  "D203",    # incompatible with D211
+  "D213",    # incompatible with D212
+  "ISC001",  # conflicts with the formatter
+  "TC001",   # HA style: runtime imports of first-party types are fine
+  "TC002",
+  "TC003",
+  "TRY003",  # long messages in exceptions are fine
+  "EM101",
+  "EM102",
+  "FBT001",  # HA callback signatures use positional bools
+  "FBT002",
+  "PLR0913",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+  "S101",     # assert
+  "S105",     # fake tokens
+  "S106",
+  "S107",
+  "PLR2004",  # magic values
+  "SLF001",   # private access
+  "ARG001",   # unused fixture arguments
+  "D",
+  "ANN",
+  "INP001",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["custom_components.hallingdal_renovasjon"]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+files = [
+  "custom_components/hallingdal_renovasjon/api.py",
+  "custom_components/hallingdal_renovasjon/coordinator.py",
+]

@@ -1,0 +1,1 @@
+"""The Hallingdal Renovasjon integration."""
