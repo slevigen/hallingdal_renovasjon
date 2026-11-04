@@ -155,7 +155,37 @@ The client re-logs in once on `500`/`401` and retries.
 
 ### Token lifetime
 
-Measurement in progress (one token reused at growing intervals). `tokenexpiry: 0` suggests no fixed expiry is advertised.
+Measured by reusing one token at growing intervals (60 s, 4 min, 10 min, 15 min,
+then 30–60 min steps up to ~6 h):
+
+| Token age | Result |
+|-----------|--------|
+| 2 min     | 200    |
+| 6 min     | 200    |
+| 16 min    | 200    |
+
+The token was still valid after 16 minutes of idle time when v0.1.0 was tagged;
+the measurement continues and this table will be extended. The login response
+header `tokenexpiry: 0` does not advertise an expiry. With a 6-hour polling
+interval the integration therefore expects the token to have expired on most
+polls, and handles that with one re-login (two extra requests per 6 h).
+
+For realistic tests the reauth logic is exercised with a mocked `500` on the
+first call (see `tests/test_api.py`), which is exactly what the live service
+returns for an invalid token.
+
+## Deviations from the original specification
+
+- Endpoints: the documented `/api/v1/renovasjon/...` paths are used instead of
+  the short `/api/...` aliases from the Homey code (identical responses).
+- The API returns the fraction name (`fraksjon`), which is preferred over the
+  static table. Paper is called "Papp, papir og drikkekartong" by the API.
+- `sNr` (section number) exists and is parsed; `kommune` names carry a
+  `(Nytt nr)` suffix, so the config flow uses its own municipality table.
+- No fraction list endpoint exists.
+- Tests use Home Assistant's `AiohttpClientMocker` instead of aioresponses,
+  because aioresponses 0.7.9 (latest) is incompatible with aiohttp 3.14.
+- Icons are defined in `icons.json` (current HA pattern) rather than in code.
 
 ## Open questions
 
