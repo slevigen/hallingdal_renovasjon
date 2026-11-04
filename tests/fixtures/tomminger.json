@@ -1,0 +1,106 @@
+[
+  {
+    "dato": "2026-11-06T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Matavfall",
+    "fraksjonId": "111106",
+    "symbolId": 9
+  },
+  {
+    "dato": "2026-11-06T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Papp, papir og drikkekartong",
+    "fraksjonId": "10095",
+    "symbolId": 12
+  },
+  {
+    "dato": "2026-11-20T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Restavfall",
+    "fraksjonId": "9999",
+    "symbolId": 15
+  },
+  {
+    "dato": "2026-11-20T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Plastemballasje",
+    "fraksjonId": "3200",
+    "symbolId": 14
+  },
+  {
+    "dato": "2026-11-27T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Matavfall",
+    "fraksjonId": "111106",
+    "symbolId": 9
+  },
+  {
+    "dato": "2026-11-27T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Papp, papir og drikkekartong",
+    "fraksjonId": "10095",
+    "symbolId": 12
+  },
+  {
+    "dato": "2026-12-04T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 10,
+    "fraksjon": "Glass- og metallemballasje",
+    "fraksjonId": "2612",
+    "symbolId": 4
+  },
+  {
+    "dato": "2026-12-11T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Restavfall",
+    "fraksjonId": "9999",
+    "symbolId": 15
+  },
+  {
+    "dato": "2026-12-11T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Plastemballasje",
+    "fraksjonId": "3200",
+    "symbolId": 14
+  },
+  {
+    "dato": "2026-12-18T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Matavfall",
+    "fraksjonId": "111106",
+    "symbolId": 9
+  },
+  {
+    "dato": "2026-12-18T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Papp, papir og drikkekartong",
+    "fraksjonId": "10095",
+    "symbolId": 12
+  },
+  {
+    "dato": "2026-12-29T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Restavfall",
+    "fraksjonId": "9999",
+    "symbolId": 15
+  },
+  {
+    "dato": "2026-12-29T00:00:00",
+    "frekvensType": 4,
+    "frekvensIntervall": 3,
+    "fraksjon": "Plastemballasje",
+    "fraksjonId": "3200",
+    "symbolId": 14
+  }
+]

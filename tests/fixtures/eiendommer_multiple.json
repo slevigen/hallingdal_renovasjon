@@ -1,0 +1,68 @@
+[
+  {
+    "id": "0b7e2d4a-1c3f-4e5a-8b9c-0d1e2f3a4b01",
+    "kommuneNr": "3324",
+    "kommune": "Gol (Nytt nr)",
+    "gNr": "900",
+    "bNr": "10",
+    "fNr": "0",
+    "sNr": "0",
+    "adresse": "Testveien 1",
+    "eier": ""
+  },
+  {
+    "id": "0b7e2d4a-1c3f-4e5a-8b9c-0d1e2f3a4b02",
+    "kommuneNr": "3324",
+    "kommune": "Gol (Nytt nr)",
+    "gNr": "900",
+    "bNr": "11",
+    "fNr": "2",
+    "sNr": "0",
+    "adresse": "Testveien 3",
+    "eier": ""
+  },
+  {
+    "id": "0b7e2d4a-1c3f-4e5a-8b9c-0d1e2f3a4b03",
+    "kommuneNr": "3324",
+    "kommune": "Gol (Nytt nr)",
+    "gNr": "900",
+    "bNr": "12",
+    "fNr": "0",
+    "sNr": "1",
+    "adresse": "Testveien 5",
+    "eier": ""
+  },
+  {
+    "id": "0b7e2d4a-1c3f-4e5a-8b9c-0d1e2f3a4b04",
+    "kommuneNr": "3324",
+    "kommune": "Gol (Nytt nr)",
+    "gNr": "900",
+    "bNr": "12",
+    "fNr": "0",
+    "sNr": "2",
+    "adresse": "Testveien 5",
+    "eier": ""
+  },
+  {
+    "id": "0b7e2d4a-1c3f-4e5a-8b9c-0d1e2f3a4b05",
+    "kommuneNr": "3320",
+    "kommune": "Flå (Nytt nr)",
+    "gNr": "901",
+    "bNr": "3",
+    "fNr": "0",
+    "sNr": "0",
+    "adresse": "Testveien 7",
+    "eier": ""
+  },
+  {
+    "id": "0b7e2d4a-1c3f-4e5a-8b9c-0d1e2f3a4b06",
+    "kommuneNr": "3301",
+    "kommune": "Drammen",
+    "gNr": "902",
+    "bNr": "4",
+    "fNr": "0",
+    "sNr": "0",
+    "adresse": "Testveien 9",
+    "eier": ""
+  }
+]
