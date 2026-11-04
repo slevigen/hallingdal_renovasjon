@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import IMAGES_URL, VERSION
 from .coordinator import (
     FractionSchedule,
     HallingdalRenovasjonConfigEntry,
@@ -82,6 +83,8 @@ class FractionSensor(HallingdalRenovasjonEntity, SensorEntity):
         self._fraction_id = fraction_id
         if known:
             self._attr_translation_key = key
+            # Cache-busted so a new release with changed pictures shows up.
+            self._attr_entity_picture = f"{IMAGES_URL}/{key}.png?v={VERSION}"
         else:
             schedule = coordinator.data.fractions.get(fraction_id)
             self._attr_name = schedule.name if schedule else f"Fraksjon {fraction_id}"

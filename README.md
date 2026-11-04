@@ -48,6 +48,9 @@ Alle entitetene hører til én enhet per eiendom, oppkalt etter adressen.
 | `sensor.<adresse>_glass_metall` | Neste dato for glass- og metallemballasje |
 | `sensor.<adresse>_neste_henting` | Neste henting uansett avfallstype |
 
+Sensorene for avfallstypene viser sorteringspiktogrammet som bilde (`entity_picture`).
+Bildene følger med integrasjonen, så Home Assistant henter ingenting utenfra for å vise dem.
+
 Sensorene er datosensorer (`device_class: date`). Attributter:
 
 - Per avfallstype: `days_until` (dager til neste tømming), `fraction_id`,
@@ -58,7 +61,37 @@ En tømming som er i dag, regnes som «neste» hele dagen. `days_until` regnes e
 lokal dato i Home Assistant. Planen hentes hver 6. time for 90 dager fram i tid.
 Avfallstyper som eiendommen ikke har, får ingen sensor.
 
-<!-- TODO: skjermbilde av enheten med entitetene, docs/screenshot.png -->
+## Kort
+
+Integrasjonen har med seg et eget dashbordkort med de offisielle
+sorteringsmerkene. Det lastes automatisk, så du trenger ikke legge til noen ressurs.
+Velg **Hallingdal Renovasjon** når du legger til et kort, eller skriv YAML:
+
+```yaml
+type: custom:hallingdal-renovasjon-card
+layout: list   # list, tiles eller next
+```
+
+![Kortet i visningene list, tiles og next](docs/card.png)
+
+Alle valgene kan også settes i kortets visuelle redigering.
+
+| Valg | Standard | Betydning |
+|---|---|---|
+| `device_id` | første eiendom | Hvilken eiendom kortet viser |
+| `layout` | `list` | `list` (rader), `tiles` (fliser) eller `next` (neste henting stort, resten under) |
+| `title` | adressen | Egen tittel |
+| `show_title` | `true` | Skjul tittelen med `false` |
+| `fractions` | alle | Liste med avfallstyper som skal vises, i ønsket rekkefølge: `restavfall`, `matavfall`, `papir`, `plast`, `glass_metall` |
+| `sort` | `date` | `date` (neste først) eller `fixed` (rekkefølgen i `fractions`) |
+| `date_format` | `both` | `both` («I morgen» og dato), `relative` eller `date` |
+| `highlight_days` | `1` | Uthev tømminger innen så mange dager; `0` slår av |
+| `max_items` | ingen | Maks antall avfallstyper |
+| `language` | `auto` | `auto` (som Home Assistant), `nb` eller `en` |
+
+Trykk på en rad for å åpne sensoren.
+
+Sorteringsmerkene er brukt med tillatelse.
 
 ## Eksempel: varsel kvelden før
 
@@ -102,7 +135,8 @@ Hallingdal Renovasjon IKS (Hol, Ål, Gol, Hemsedal, Nesbyen, Flå and Krødshera
 Install it as a HACS custom repository, then add it in the UI: type your address
 and pick the property. You get a calendar with all upcoming pickups, one date
 sensor per waste type, and a "next pickup" sensor with `days_until` and `fractions`
-attributes. It uses the **unofficial** API behind the Hallingdal Renovasjon
+attributes, plus a bundled dashboard card (`custom:hallingdal-renovasjon-card`) with
+the official sorting pictograms. It uses the **unofficial** API behind the Hallingdal Renovasjon
 mobile app, which may change or stop working at any time.
 
 ## Lisens

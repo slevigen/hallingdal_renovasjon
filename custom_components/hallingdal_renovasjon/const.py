@@ -16,6 +16,8 @@ LOGGER: Final = logging.getLogger(__package__)
 # Keep in sync with manifest.json (checked by tests).
 VERSION: Final = "0.1.0"
 REPO_URL: Final = "https://github.com/slevigen/hallingdal_renovasjon"
+IMAGES_URL: Final = f"/{DOMAIN}/images"  # fraction pictures served by the integration
+CARD_URL: Final = f"/{DOMAIN}/hallingdal-renovasjon-card.js"  # Lovelace card, auto-loaded
 USER_AGENT: Final = f"HomeAssistant-HallingdalRenovasjon/{VERSION} (+{REPO_URL})"
 
 UPDATE_INTERVAL: Final = timedelta(hours=6)

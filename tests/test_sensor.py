@@ -205,3 +205,17 @@ async def test_switching_property_replaces_device(hass: HomeAssistant, setup_int
     assert "sensor.testveien_7_neste_henting" in entity_ids
     assert "calendar.testveien_7" in entity_ids
     assert not any(e.startswith(("sensor.testveien_1", "calendar.testveien_1")) for e in entity_ids)
+
+
+async def test_fraction_pictures_are_served(
+    hass: HomeAssistant, setup_integration, hass_client
+) -> None:
+    client = await hass_client()
+    for key in ("restavfall", "matavfall", "papir", "plast", "glass_metall"):
+        picture = hass.states.get(f"sensor.testveien_1_{key}").attributes["entity_picture"]
+        assert picture.startswith(f"/hallingdal_renovasjon/images/{key}.png?v=")
+        response = await client.get(picture)
+        assert response.status == 200, key
+        assert (await response.read()).startswith(b"\x89PNG")
+    # Unknown fractions and the summary sensor keep plain icons.
+    assert "entity_picture" not in hass.states.get("sensor.testveien_1_neste_henting").attributes

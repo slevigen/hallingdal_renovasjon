@@ -3,6 +3,7 @@
   "name": "Hallingdal Renovasjon",
   "codeowners": ["@slevigen"],
   "config_flow": true,
+  "dependencies": ["frontend", "http"],
   "documentation": "https://github.com/slevigen/hallingdal_renovasjon",
   "integration_type": "service",
   "iot_class": "cloud_polling",

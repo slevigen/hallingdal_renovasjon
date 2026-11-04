@@ -8,3 +8,6 @@ __pycache__/
 htmlcov/
 config/*
 !config/configuration.yaml
+
+# Official pictogram sources (input for scripts/build_images.py)
+merker/
