@@ -8,6 +8,7 @@ license = "MIT"
 [dependency-groups]
 dev = [
   "pytest-homeassistant-custom-component==0.13.375",
+  "home-assistant-frontend==20260930.5",  # frontend is a dependency of the integration
   "aioresponses==0.7.9",
   "ruff",
   "mypy",
