@@ -115,3 +115,15 @@ def config_entry(hass: Any) -> Any:
     )
     entry.add_to_hass(hass)
     return entry
+
+
+@pytest.fixture
+async def setup_integration(hass: Any, config_entry: Any, mock_api: MockApi, freezer: Any) -> Any:
+    """Set up the integration on 2026-11-04 10:00 Oslo time with the pickup fixture."""
+    await hass.config.async_set_time_zone("Europe/Oslo")
+    freezer.move_to("2026-11-04 10:00:00+01:00")
+    mock_api.login()
+    mock_api.pickups(load_fixture("tomminger.json"))
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry

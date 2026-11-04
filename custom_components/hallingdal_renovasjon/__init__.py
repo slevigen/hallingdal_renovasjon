@@ -11,7 +11,7 @@ from .api import HallingdalRenovasjonApiClient
 from .const import CONF_PROPERTY_ID, DOMAIN
 from .coordinator import HallingdalRenovasjonConfigEntry, HallingdalRenovasjonCoordinator
 
-PLATFORMS: list[Platform] = []
+PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HallingdalRenovasjonConfigEntry) -> bool:
