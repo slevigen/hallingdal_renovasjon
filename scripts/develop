@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Run a local Home Assistant with this integration on http://localhost:8123.
+set -e
+cd "$(dirname "$0")/.."
+mkdir -p config
+# Let HA find custom_components/hallingdal_renovasjon without symlinks.
+export PYTHONPATH="${PYTHONPATH}:${PWD}"
+exec .venv/bin/hass --config "${PWD}/config" --debug

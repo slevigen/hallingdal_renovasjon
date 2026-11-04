@@ -1,0 +1,48 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  hassfest:
+    name: Hassfest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: home-assistant/actions/hassfest@master
+
+  hacs:
+    name: HACS
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hacs/action@main
+        with:
+          category: integration
+          # Brand images are not submitted to home-assistant/brands yet.
+          ignore: brands
+
+  tests:
+    name: Lint and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install
+        run: |
+          uv venv -p 3.14 .venv
+          uv pip install -p .venv --group dev
+      - name: Ruff
+        run: |
+          .venv/bin/ruff format --check .
+          .venv/bin/ruff check .
+      - name: Mypy
+        run: .venv/bin/mypy
+      - name: Pytest
+        run: .venv/bin/pytest -q

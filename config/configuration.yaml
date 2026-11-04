@@ -1,0 +1,16 @@
+# Development instance only (scripts/develop). The integration itself is UI-only.
+homeassistant:
+  name: Hallingdal dev
+  time_zone: Europe/Oslo
+  country: "NO"
+  language: nb
+  unit_system: metric
+  latitude: 60.7
+  longitude: 8.9
+
+default_config:
+
+logger:
+  default: info
+  logs:
+    custom_components.hallingdal_renovasjon: debug

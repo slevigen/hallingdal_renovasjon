@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Create .venv with Home Assistant, test and lint tooling.
+set -e
+cd "$(dirname "$0")/.."
+uv venv -p 3.14 .venv
+uv pip install -p .venv --group dev
