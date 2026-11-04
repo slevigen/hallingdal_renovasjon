@@ -155,20 +155,22 @@ The client re-logs in once on `500`/`401` and retries.
 
 ### Token lifetime
 
-Measured by reusing one token at growing intervals (60 s, 4 min, 10 min, 15 min,
-then 30–60 min steps up to ~6 h):
+Measured on 2026-11-04 by reusing one token at growing intervals:
 
-| Token age | Result |
-|-----------|--------|
-| 2 min     | 200    |
-| 6 min     | 200    |
-| 16 min    | 200    |
+| Token age | Gap since previous use | Result |
+|-----------|------------------------|--------|
+| 2 min     | 2 min                  | 200    |
+| 6 min     | 4 min                  | 200    |
+| 16 min    | 10 min                 | 200    |
+| 31 min    | 15 min                 | 200    |
+| 61 min    | 30 min                 | **500** |
 
-The token was still valid after 16 minutes of idle time when v0.1.0 was tagged;
-the measurement continues and this table will be extended. The login response
-header `tokenexpiry: 0` does not advertise an expiry. With a 6-hour polling
-interval the integration therefore expects the token to have expired on most
-polls, and handles that with one re-login (two extra requests per 6 h).
+So the token dies somewhere between 31 and 61 minutes. The data cannot tell an
+absolute lifetime (31–61 min) from a sliding idle timeout (15–30 min). The
+login header `tokenexpiry: 0` does not advertise either. With a 6-hour polling
+interval the token has always expired, so every poll costs one failed request
+plus a re-login. That is cheap (three small requests per 6 h per property) and
+avoids guessing an expiry.
 
 For realistic tests the reauth logic is exercised with a mocked `500` on the
 first call (see `tests/test_api.py`), which is exactly what the live service
