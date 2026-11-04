@@ -73,6 +73,10 @@ class MockApi:
     def pickups(self, json: Any = None, *, status: int = 200, **kwargs: Any) -> None:
         self._queue(PICKUPS_URL, "get", status=status, json=json, **kwargs)
 
+    def reset(self, url: str) -> None:
+        """Forget queued responses for one endpoint."""
+        self._queues[url].clear()
+
     def calls(self, url: str) -> list[tuple[str, URL, Any, dict[str, str]]]:
         return [c for c in self.mocker.mock_calls if str(c[1]).split("?")[0] == url]
 
@@ -86,3 +90,28 @@ def mock_api(aioclient_mock: AiohttpClientMocker) -> MockApi:
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
     """Allow Home Assistant to load the custom integration in every test."""
+
+
+PROPERTY_ID = "2f6c1a9e-7b3d-4c58-9e21-5a0d8f4b6c13"  # from fixtures/eiendommer.json
+ENTRY_DATA = {"eiendom_id": PROPERTY_ID, "address": "Testveien 1", "kommune_nr": "3318"}
+
+
+@pytest.fixture
+async def oslo_tz(hass: Any) -> None:
+    """Run HA in Norwegian local time (the default test zone is US/Pacific)."""
+    await hass.config.async_set_time_zone("Europe/Oslo")
+
+
+@pytest.fixture
+def config_entry(hass: Any) -> Any:
+    """Return a config entry for the anonymised test property, added to hass."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry  # noqa: PLC0415
+
+    entry = MockConfigEntry(
+        domain="hallingdal_renovasjon",
+        title="Testveien 1",
+        unique_id=PROPERTY_ID,
+        data=ENTRY_DATA,
+    )
+    entry.add_to_hass(hass)
+    return entry

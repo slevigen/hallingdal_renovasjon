@@ -1,0 +1,141 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Finn eiendommen",
+        "description": "Skriv adressen til eiendommen. Hallingdal Renovasjon dekker Hol, Ål, Gol, Hemsedal, Nesbyen, Flå og Krødsherad.",
+        "data": {
+          "address": "Adresse"
+        },
+        "data_description": {
+          "address": "For eksempel «Storgata 12». Begynnelsen av gatenavnet holder."
+        }
+      },
+      "reconfigure": {
+        "title": "Bytt eiendom",
+        "description": "Skriv adressen til eiendommen. Hallingdal Renovasjon dekker Hol, Ål, Gol, Hemsedal, Nesbyen, Flå og Krødsherad.",
+        "data": {
+          "address": "Adresse"
+        },
+        "data_description": {
+          "address": "For eksempel «Storgata 12». Begynnelsen av gatenavnet holder."
+        }
+      },
+      "property": {
+        "title": "Velg eiendom",
+        "description": "Fant {count} eiendommer som passer. Velg den du vil ha tømmeplanen for.",
+        "data": {
+          "eiendom_id": "Eiendom"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Logg inn på nytt",
+        "description": "Hallingdal Renovasjon avviste innloggingen. Integrasjonen har ikke brukernavn eller passord, så dette prøver bare på nytt."
+      }
+    },
+    "error": {
+      "cannot_connect": "Fikk ikke kontakt med Hallingdal Renovasjon. Prøv igjen senere.",
+      "no_results": "Fant ingen eiendommer. Prøv å søke på bare begynnelsen av gatenavnet, f.eks. «Storg» – registeret kan skrive «veg» der du skriver «vei».",
+      "invalid_auth": "Innloggingen ble avvist igjen. Tjenesten kan være nede, eller det uoffisielle API-et kan ha endret seg.",
+      "unknown": "Uventet feil. Se loggen for detaljer."
+    },
+    "abort": {
+      "already_configured": "Denne eiendommen er allerede satt opp.",
+      "reauth_successful": "Logget inn på nytt.",
+      "reconfigure_successful": "Eiendommen ble byttet."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "restavfall": {
+        "name": "Restavfall",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dager til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Kommende"
+          }
+        }
+      },
+      "matavfall": {
+        "name": "Matavfall",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dager til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Kommende"
+          }
+        }
+      },
+      "papir": {
+        "name": "Papir og papp",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dager til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Kommende"
+          }
+        }
+      },
+      "plast": {
+        "name": "Plastemballasje",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dager til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Kommende"
+          }
+        }
+      },
+      "glass_metall": {
+        "name": "Glass- og metallemballasje",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dager til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Kommende"
+          }
+        }
+      },
+      "neste_henting": {
+        "name": "Neste henting",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dager til"
+          },
+          "fractions": {
+            "name": "Fraksjoner"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Hallingdal Renovasjon avviste innloggingen."
+    },
+    "update_failed": {
+      "message": "Kunne ikke hente tømmeplanen: {error}"
+    }
+  }
+}

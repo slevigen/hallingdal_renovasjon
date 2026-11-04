@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "restavfall": { "default": "mdi:trash-can" },
+      "matavfall": { "default": "mdi:food-apple" },
+      "papir": { "default": "mdi:newspaper-variant" },
+      "plast": { "default": "mdi:recycle" },
+      "glass_metall": { "default": "mdi:bottle-wine" },
+      "neste_henting": { "default": "mdi:delete-clock" }
+    }
+  }
+}
