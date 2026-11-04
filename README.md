@@ -104,3 +104,7 @@ and pick the property. You get a calendar with all upcoming pickups, one date
 sensor per waste type, and a "next pickup" sensor with `days_until` and `fractions`
 attributes. It uses the **unofficial** API behind the Hallingdal Renovasjon
 mobile app, which may change or stop working at any time.
+
+## Lisens
+
+MIT – se [LICENSE](LICENSE).
