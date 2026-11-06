@@ -19,7 +19,6 @@ from .coordinator import (
 )
 from .entity import HallingdalRenovasjonEntity
 
-UPCOMING_COUNT = 5
 NEXT_KEY = "neste_henting"
 _UNKNOWN_PREFIX = "fraksjon_"
 
@@ -108,12 +107,16 @@ class FractionSensor(HallingdalRenovasjonEntity, SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """days_until, fraction_id and the next few dates."""
+        """days_until, fraction_id and every date in the fetched window.
+
+        All fractions cover the same window, so the card can group them per date
+        without a fraction going missing on later dates.
+        """
         upcoming = self._upcoming()
         return {
             "days_until": (upcoming[0] - self.today()).days if upcoming else None,
             "fraction_id": self._fraction_id,
-            "upcoming": [d.isoformat() for d in upcoming[:UPCOMING_COUNT]],
+            "upcoming": [d.isoformat() for d in upcoming],
         }
 
 

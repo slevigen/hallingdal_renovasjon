@@ -47,6 +47,7 @@ Alle entitetene hører til én enhet per eiendom, oppkalt etter adressen.
 | `sensor.<adresse>_plast` | Neste dato for plastemballasje |
 | `sensor.<adresse>_glass_metall` | Neste dato for glass- og metallemballasje |
 | `sensor.<adresse>_neste_henting` | Neste henting uansett avfallstype |
+| `binary_sensor.<adresse>_hentedag` | `on` hele dagen når noe hentes i dag |
 
 Sensorene for avfallstypene viser sorteringspiktogrammet som bilde (`entity_picture`).
 Bildene følger med integrasjonen, så Home Assistant henter ingenting utenfra for å vise dem.
@@ -54,8 +55,10 @@ Bildene følger med integrasjonen, så Home Assistant henter ingenting utenfra f
 Sensorene er datosensorer (`device_class: date`). Attributter:
 
 - Per avfallstype: `days_until` (dager til neste tømming), `fraction_id`,
-  `upcoming` (de neste fem datoene).
+  `upcoming` (alle datoene de neste 90 dagene).
 - Neste henting: `days_until` og `fractions` (avfallstypene som hentes den dagen).
+- Hentedag: `fractions` (avfallstypene som hentes i dag) og dager til neste
+  tømming per avfallstype, f.eks. `matavfall: 1` og `restavfall: 14`.
 
 En tømming som er i dag, regnes som «neste» hele dagen. `days_until` regnes etter
 lokal dato i Home Assistant. Planen hentes hver 6. time for 90 dager fram i tid.
@@ -69,27 +72,27 @@ Velg **Hallingdal Renovasjon** når du legger til et kort, eller skriv YAML:
 
 ```yaml
 type: custom:hallingdal-renovasjon-card
-layout: list   # list, tiles eller next
+layout: list   # list, tiles, next eller dates
 ```
 
-![Kortet i visningene list, tiles og next](docs/card.png)
+![Kortet i visningene list, tiles, next og dates](docs/card.png)
 
 Alle valgene kan også settes i kortets visuelle redigering.
 
 | Valg | Standard | Betydning |
 |---|---|---|
 | `device_id` | første eiendom | Hvilken eiendom kortet viser |
-| `layout` | `list` | `list` (rader), `tiles` (fliser) eller `next` (neste henting stort, resten under) |
+| `layout` | `list` | `list` (rader), `tiles` (fliser), `next` (neste henting stort, resten under) eller `dates` (én rad per hentedag med alle avfallstypene den dagen) |
 | `title` | adressen | Egen tittel |
 | `show_title` | `true` | Skjul tittelen med `false` |
 | `fractions` | alle | Liste med avfallstyper som skal vises, i ønsket rekkefølge: `restavfall`, `matavfall`, `papir`, `plast`, `glass_metall` |
-| `sort` | `date` | `date` (neste først) eller `fixed` (rekkefølgen i `fractions`) |
+| `sort` | `date` | `date` (neste først) eller `fixed` (rekkefølgen i `fractions`). Gjelder ikke `dates`. |
 | `date_format` | `both` | `both` («I morgen» og dato), `relative` eller `date` |
 | `highlight_days` | `1` | Uthev tømminger innen så mange dager; `0` slår av |
-| `max_items` | ingen | Maks antall avfallstyper |
+| `max_items` | ingen | Maks antall avfallstyper. For `dates`: antall hentedager (standard 6). |
 | `language` | `auto` | `auto` (som Home Assistant), `nb` eller `en` |
 
-Trykk på en rad for å åpne sensoren.
+Trykk på en rad for å åpne sensoren. I `dates` åpner raden kalenderen.
 
 Sorteringsmerkene er brukt med tillatelse.
 
@@ -115,6 +118,14 @@ automation:
 
 Bytt `storgata_12` med adressen din, slik den står i entitets-ID-en.
 
+Bare én avfallstype, med hentedag-sensoren:
+
+```yaml
+conditions:
+  - condition: template
+    value_template: "{{ state_attr('binary_sensor.storgata_12_hentedag', 'matavfall') == 1 }}"
+```
+
 ## Utvikling
 
 ```bash
@@ -135,7 +146,7 @@ Hallingdal Renovasjon IKS (Hol, Ål, Gol, Hemsedal, Nesbyen, Flå and Krødshera
 Install it as a HACS custom repository, then add it in the UI: type your address
 and pick the property. You get a calendar with all upcoming pickups, one date
 sensor per waste type, and a "next pickup" sensor with `days_until` and `fractions`
-attributes, plus a bundled dashboard card (`custom:hallingdal-renovasjon-card`) with
+attributes, a "pickup day" binary sensor, plus a bundled dashboard card (`custom:hallingdal-renovasjon-card`) with
 the official sorting pictograms. It uses the **unofficial** API behind the Hallingdal Renovasjon
 mobile app, which may change or stop working at any time.
 

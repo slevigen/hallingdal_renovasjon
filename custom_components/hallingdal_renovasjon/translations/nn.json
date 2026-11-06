@@ -1,0 +1,166 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Finn eigedomen",
+        "description": "Skriv adressa til eigedomen. Hallingdal Renovasjon dekkjer Hol, Ål, Gol, Hemsedal, Nesbyen, Flå og Krødsherad.",
+        "data": {
+          "address": "Adresse"
+        },
+        "data_description": {
+          "address": "Til dømes «Storgata 12». Byrjinga av gatenamnet held."
+        }
+      },
+      "reconfigure": {
+        "title": "Byt eigedom",
+        "description": "Skriv adressa til eigedomen. Hallingdal Renovasjon dekkjer Hol, Ål, Gol, Hemsedal, Nesbyen, Flå og Krødsherad.",
+        "data": {
+          "address": "Adresse"
+        },
+        "data_description": {
+          "address": "Til dømes «Storgata 12». Byrjinga av gatenamnet held."
+        }
+      },
+      "property": {
+        "title": "Vel eigedom",
+        "description": "Fann {count} eigedomar som passar. Vel den du vil ha tømmeplanen for.",
+        "data": {
+          "eiendom_id": "Eigedom"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Logg inn på nytt",
+        "description": "Hallingdal Renovasjon avviste innlogginga. Integrasjonen har ikkje brukarnamn eller passord, så dette prøver berre på nytt."
+      }
+    },
+    "error": {
+      "cannot_connect": "Fekk ikkje kontakt med Hallingdal Renovasjon. Prøv igjen seinare.",
+      "no_results": "Fann ingen eigedomar. Prøv å søkje på berre byrjinga av gatenamnet, t.d. «Storg» – registeret kan skrive «veg» der du skriv «vei».",
+      "invalid_auth": "Innlogginga vart avvist igjen. Tenesta kan vere nede, eller det uoffisielle API-et kan ha endra seg.",
+      "unknown": "Uventa feil. Sjå loggen for detaljar."
+    },
+    "abort": {
+      "already_configured": "Denne eigedomen er allereie sett opp.",
+      "reauth_successful": "Logga inn på nytt.",
+      "reconfigure_successful": "Eigedomen vart bytt."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "hentedag": {
+        "name": "Hentedag",
+        "state_attributes": {
+          "fractions": {
+            "name": "Blir henta i dag"
+          },
+          "restavfall": {
+            "name": "Restavfall (dagar)"
+          },
+          "matavfall": {
+            "name": "Matavfall (dagar)"
+          },
+          "papir": {
+            "name": "Papir og papp (dagar)"
+          },
+          "plast": {
+            "name": "Plastemballasje (dagar)"
+          },
+          "glass_metall": {
+            "name": "Glass- og metallemballasje (dagar)"
+          }
+        }
+      }
+    },
+    "sensor": {
+      "restavfall": {
+        "name": "Restavfall",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dagar til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Komande"
+          }
+        }
+      },
+      "matavfall": {
+        "name": "Matavfall",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dagar til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Komande"
+          }
+        }
+      },
+      "papir": {
+        "name": "Papir og papp",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dagar til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Komande"
+          }
+        }
+      },
+      "plast": {
+        "name": "Plastemballasje",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dagar til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Komande"
+          }
+        }
+      },
+      "glass_metall": {
+        "name": "Glass- og metallemballasje",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dagar til"
+          },
+          "fraction_id": {
+            "name": "Fraksjons-ID"
+          },
+          "upcoming": {
+            "name": "Komande"
+          }
+        }
+      },
+      "neste_henting": {
+        "name": "Neste henting",
+        "state_attributes": {
+          "days_until": {
+            "name": "Dagar til"
+          },
+          "fractions": {
+            "name": "Fraksjonar"
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Hallingdal Renovasjon avviste innlogginga."
+    },
+    "update_failed": {
+      "message": "Kunne ikkje hente tømmeplanen: {error}"
+    }
+  }
+}

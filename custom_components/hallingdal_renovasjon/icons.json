@@ -1,5 +1,11 @@
 {
   "entity": {
+    "binary_sensor": {
+      "hentedag": {
+        "default": "mdi:calendar-blank-outline",
+        "state": { "on": "mdi:calendar-check" }
+      }
+    },
     "sensor": {
       "restavfall": { "default": "mdi:trash-can" },
       "matavfall": { "default": "mdi:food-apple" },

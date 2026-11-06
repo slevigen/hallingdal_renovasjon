@@ -7,14 +7,14 @@
  *
  *   type: custom:hallingdal-renovasjon-card
  *   device_id: <optional, defaults to the first property>
- *   layout: list | tiles | next          (default: list)
+ *   layout: list | tiles | next | dates  (default: list; dates = one row per pickup day)
  *   title: <optional, defaults to the address>
  *   show_title: true
  *   fractions: [restavfall, matavfall, papir, plast, glass_metall]  (filter + order)
  *   sort: date | fixed                   (default: date)
  *   date_format: both | relative | date  (default: both)
  *   highlight_days: 1                    (highlight pickups within N days, 0 = off)
- *   max_items: <optional>
+ *   max_items: <optional>                (dates: number of days, default 6)
  *   language: auto | nb | en             (default: auto, follows Home Assistant)
  */
 
@@ -22,6 +22,8 @@ const DOMAIN = "hallingdal_renovasjon";
 const CARD = "hallingdal-renovasjon-card";
 const ASSET_VERSION = new URL(import.meta.url).searchParams.get("v") || "";
 const NEXT_KEY = "neste_henting";
+const LAYOUTS = ["list", "tiles", "next", "dates"];
+const DATES_DEFAULT_MAX = 6;
 
 const FRACTIONS = {
   restavfall: { color: "#141414", nb: "Restavfall", en: "Residual waste" },
@@ -60,6 +62,7 @@ const STRINGS = {
       list: "Liste",
       tiles: "Fliser",
       next: "Neste henting",
+      dates: "Hentedager",
       date: "Etter dato",
       fixed: "Fast rekkefølge",
       both: "Relativ og dato",
@@ -97,6 +100,7 @@ const STRINGS = {
       list: "List",
       tiles: "Tiles",
       next: "Next pickup",
+      dates: "Pickup days",
       date: "By date",
       fixed: "Fixed order",
       both: "Relative and date",
@@ -159,7 +163,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
 
   setConfig(config) {
     const layout = config?.layout ?? DEFAULTS.layout;
-    if (!["list", "tiles", "next"].includes(layout)) {
+    if (!LAYOUTS.includes(layout)) {
       throw new Error(`Unknown layout: ${layout}`);
     }
     this._config = { ...DEFAULTS, ...config };
@@ -176,6 +180,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
     const n = this._items?.length ?? 3;
     if (this._config?.layout === "tiles") return 1 + Math.ceil(n / 3) * 2;
     if (this._config?.layout === "next") return 3 + n;
+    if (this._config?.layout === "dates") return 1 + Math.ceil(n * 1.5);
     return 1 + n;
   }
 
@@ -199,8 +204,10 @@ class HallingdalRenovasjonCard extends HTMLElement {
     const deviceName = device?.name_by_user || device?.name || "";
     const today = localToday();
     const items = [];
+    let calendarId = null;
     for (const entity of Object.values(hass.entities || {})) {
       if (entity.platform !== DOMAIN || entity.device_id !== deviceId) continue;
+      if (entity.entity_id.startsWith("calendar.")) calendarId = entity.entity_id;
       if (!entity.entity_id.startsWith("sensor.") || entity.translation_key === NEXT_KEY) continue;
       const state = hass.states[entity.entity_id];
       if (!state) continue;
@@ -226,19 +233,15 @@ class HallingdalRenovasjonCard extends HTMLElement {
         upcoming: state.attributes.upcoming || [],
       });
     }
-    return { items, deviceName };
+    return { items, deviceName, calendarId };
   }
 
-  _select(items) {
+  _select(items, limit = true) {
     const cfg = this._config;
     let out = items;
-    const wanted = Array.isArray(cfg.fractions) && cfg.fractions.length ? cfg.fractions : null;
+    const wanted = this._wanted();
     if (wanted) out = out.filter((i) => wanted.includes(i.key));
-    const order = (i) => {
-      const list = wanted || Object.keys(FRACTIONS);
-      const idx = list.indexOf(i.key);
-      return idx === -1 ? 999 : idx;
-    };
+    const order = (i) => this._order(i);
     out.sort((a, b) => {
       if (cfg.sort !== "fixed") {
         const da = a.date ? a.date.getTime() : Infinity;
@@ -247,8 +250,19 @@ class HallingdalRenovasjonCard extends HTMLElement {
       }
       return order(a) - order(b) || a.name.localeCompare(b.name);
     });
-    if (cfg.max_items > 0) out = out.slice(0, cfg.max_items);
+    if (limit && cfg.max_items > 0) out = out.slice(0, cfg.max_items);
     return out;
+  }
+
+  _wanted() {
+    const f = this._config.fractions;
+    return Array.isArray(f) && f.length ? f : null;
+  }
+
+  /** Position in `fractions`, or in the standard order; unknown fractions last. */
+  _order(item) {
+    const idx = (this._wanted() || Object.keys(FRACTIONS)).indexOf(item.key);
+    return idx === -1 ? 999 : idx;
   }
 
   _relative(item) {
@@ -307,14 +321,18 @@ class HallingdalRenovasjonCard extends HTMLElement {
       this._paint(`<div class="empty">${escapeHtml(t.no_device)}</div>`, "no-device");
       return;
     }
-    const { items, deviceName } = this._collect();
-    const selected = this._select(items);
-    this._items = selected;
+    const { items, deviceName, calendarId } = this._collect();
+    const dates = this._config.layout === "dates";
+    const selected = this._select(items, !dates);
+    const groups = dates ? this._groups(selected) : null;
+    this._items = groups || selected;
     const signature = JSON.stringify([
       this._config,
       langOf(this._hass, this._config),
       deviceName,
-      selected.map((i) => [i.entityId, i.date?.getTime(), i.days, i.unavailable, i.name]),
+      calendarId,
+      localToday().getTime(),
+      selected.map((i) => [i.entityId, i.date?.getTime(), i.days, i.unavailable, i.name, i.upcoming]),
     ]);
     if (signature === this._signature) return;
     this._signature = signature;
@@ -322,7 +340,8 @@ class HallingdalRenovasjonCard extends HTMLElement {
     const title = this._config.show_title === false ? "" : this._config.title || deviceName;
     const header = title ? `<h1 class="title">${escapeHtml(title)}</h1>` : "";
     let body;
-    if (!selected.length) body = `<div class="empty">${escapeHtml(t.none)}</div>`;
+    if (!selected.length || (groups && !groups.length)) body = `<div class="empty">${escapeHtml(t.none)}</div>`;
+    else if (groups) body = this._dates(groups, calendarId);
     else if (this._config.layout === "tiles") body = this._tiles(selected);
     else if (this._config.layout === "next") body = this._next(selected);
     else body = this._list(selected);
@@ -405,6 +424,53 @@ class HallingdalRenovasjonCard extends HTMLElement {
     return hero + later;
   }
 
+  /**
+   * Pickup days from every fraction's `upcoming` dates, each with the fractions
+   * collected that day. All fractions share the integration's fetch window, so
+   * a day never lacks a fraction that is in fact collected then.
+   */
+  _groups(items) {
+    const today = localToday().getTime();
+    const byDay = new Map();
+    for (const item of items) {
+      if (item.unavailable) continue;
+      for (const value of item.upcoming) {
+        const date = parseDate(value);
+        if (!date || date.getTime() < today) continue;
+        const key = date.getTime();
+        if (!byDay.has(key)) byDay.set(key, { date, days: Math.round((key - today) / 86400000), items: [] });
+        byDay.get(key).items.push(item);
+      }
+    }
+    const groups = [...byDay.values()].sort((a, b) => a.date - b.date);
+    for (const group of groups) {
+      group.items.sort((a, b) => this._order(a) - this._order(b) || a.name.localeCompare(b.name));
+    }
+    const max = Number(this._config.max_items) > 0 ? Number(this._config.max_items) : DATES_DEFAULT_MAX;
+    return groups.slice(0, max);
+  }
+
+  _dates(groups, calendarId) {
+    return `<div class="dates">${groups
+      .map((group) => {
+        const [primary, secondary] = this._when(group);
+        const soon = this._soon(group) ? " soon" : "";
+        const target = calendarId ? ` data-entity="${calendarId}"` : "";
+        const names = group.items.map((i) => i.name).join(", ");
+        return `<button class="drow${soon}"${target} style="--fraction:${group.items[0].color}">
+          <span class="dhead">
+            <span class="dwhen">${escapeHtml(primary)}</span>
+            ${secondary ? `<span class="sub">${escapeHtml(secondary)}</span>` : ""}
+          </span>
+          <span class="dbody">
+            <span class="dpics">${group.items.map((i) => this._picture(i, "small")).join("")}</span>
+            <span class="dnames">${escapeHtml(names)}</span>
+          </span>
+        </button>`;
+      })
+      .join("")}</div>`;
+  }
+
   _paint(inner, layout) {
     this.shadowRoot.innerHTML = `<style>${STYLE}</style><ha-card class="${layout}">${inner}</ha-card>`;
     for (const el of this.shadowRoot.querySelectorAll("[data-entity]")) {
@@ -478,6 +544,18 @@ const STYLE = `
   .crow .text { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.25; }
   .crow .name { font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .crow .sub { font-size: 12px; }
+
+  /* dates: pictures keep one size however many fractions share a day */
+  .dates { display: flex; flex-direction: column; gap: 4px; }
+  .drow { display: flex; flex-direction: column; gap: 6px; padding: 8px; margin: 0 -8px; border-radius: 10px; }
+  .drow:hover { background: var(--secondary-background-color); }
+  .drow.soon { background: color-mix(in srgb, var(--fraction) 10%, transparent); }
+  .dhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .dwhen { font-weight: 600; color: var(--primary-text-color); }
+  .drow.soon .dwhen { color: var(--fraction); }
+  .dbody { display: flex; align-items: center; gap: var(--gap); }
+  .dpics { display: flex; flex-wrap: wrap; gap: 6px; flex: none; max-width: 70%; }
+  .dnames { color: var(--primary-text-color); min-width: 0; flex: 1; line-height: 1.3; }
 `;
 
 class HallingdalRenovasjonCardEditor extends HTMLElement {
@@ -498,7 +576,7 @@ class HallingdalRenovasjonCardEditor extends HTMLElement {
       { name: "device_id", selector: { device: { integration: DOMAIN } } },
       {
         name: "layout",
-        selector: { select: { mode: "dropdown", options: opt([["list"], ["tiles"], ["next"]]) } },
+        selector: { select: { mode: "dropdown", options: opt(LAYOUTS.map((l) => [l])) } },
       },
       {
         type: "grid",

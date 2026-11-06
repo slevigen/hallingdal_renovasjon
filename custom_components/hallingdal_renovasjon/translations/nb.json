@@ -46,6 +46,31 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "hentedag": {
+        "name": "Hentedag",
+        "state_attributes": {
+          "fractions": {
+            "name": "Hentes i dag"
+          },
+          "restavfall": {
+            "name": "Restavfall (dager)"
+          },
+          "matavfall": {
+            "name": "Matavfall (dager)"
+          },
+          "papir": {
+            "name": "Papir og papp (dager)"
+          },
+          "plast": {
+            "name": "Plastemballasje (dager)"
+          },
+          "glass_metall": {
+            "name": "Glass- og metallemballasje (dager)"
+          }
+        }
+      }
+    },
     "sensor": {
       "restavfall": {
         "name": "Restavfall",

@@ -17,7 +17,7 @@ from .api import HallingdalRenovasjonApiClient
 from .const import CARD_URL, CONF_PROPERTY_ID, DOMAIN, IMAGES_URL, VERSION
 from .coordinator import HallingdalRenovasjonConfigEntry, HallingdalRenovasjonCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

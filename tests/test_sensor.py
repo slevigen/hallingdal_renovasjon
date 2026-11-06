@@ -219,3 +219,22 @@ async def test_fraction_pictures_are_served(
         assert (await response.read()).startswith(b"\x89PNG")
     # Unknown fractions and the summary sensor keep plain icons.
     assert "entity_picture" not in hass.states.get("sensor.testveien_1_neste_henting").attributes
+
+
+async def test_upcoming_covers_the_whole_window(
+    hass: HomeAssistant, setup_integration, mock_api, freezer
+) -> None:
+    """Not capped, so the card's per-day grouping never misses a fraction."""
+    weekly = [date(2026, 11, 6) + timedelta(weeks=n) for n in range(12)]
+    mock_api.reset(PICKUPS_URL)
+    mock_api.pickups(
+        [
+            {"dato": f"{d.isoformat()}T00:00:00", "fraksjonId": "111106", "fraksjon": "Matavfall"}
+            for d in weekly
+        ]
+    )
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    upcoming = hass.states.get("sensor.testveien_1_matavfall").attributes["upcoming"]
+    assert upcoming == [d.isoformat() for d in weekly]

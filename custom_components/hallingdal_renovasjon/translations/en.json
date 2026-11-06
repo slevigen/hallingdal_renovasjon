@@ -46,6 +46,31 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "hentedag": {
+        "name": "Pickup day",
+        "state_attributes": {
+          "fractions": {
+            "name": "Collected today"
+          },
+          "restavfall": {
+            "name": "Residual waste (days)"
+          },
+          "matavfall": {
+            "name": "Food waste (days)"
+          },
+          "papir": {
+            "name": "Paper and cardboard (days)"
+          },
+          "plast": {
+            "name": "Plastic packaging (days)"
+          },
+          "glass_metall": {
+            "name": "Glass and metal packaging (days)"
+          }
+        }
+      }
+    },
     "sensor": {
       "restavfall": {
         "name": "Residual waste",
