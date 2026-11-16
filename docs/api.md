@@ -153,6 +153,11 @@ uses that name and falls back to the static table in `const.py`, then to
 So an expired token is indistinguishable from a server error – both are `500`.
 The client re-logs in once on `500`/`401` and retries.
 
+A `500` on the login itself is treated as an outage (retried), not as rejected
+credentials: on 2026-11-16 the service answered every login with `500`
+`{"message":"An error has occurred."}` after its TLS certificate expired on
+2026-11-13. An expired certificate is reported with its own explanatory message.
+
 ### Token lifetime
 
 Measured on 2026-11-04 by reusing one token at growing intervals:

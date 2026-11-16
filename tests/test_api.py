@@ -14,6 +14,7 @@ from pytest_homeassistant_custom_component.test_util.aiohttp import AiohttpClien
 
 from custom_components.hallingdal_renovasjon.api import (
     ApiAuthError,
+    ApiCertificateExpiredError,
     ApiConnectionError,
     ApiResponseError,
     HallingdalRenovasjonApiClient,
@@ -22,7 +23,14 @@ from custom_components.hallingdal_renovasjon.api import (
 )
 from custom_components.hallingdal_renovasjon.const import USER_AGENT, VERSION
 
-from .conftest import LOGIN_URL, PICKUPS_URL, SEARCH_URL, MockApi, load_fixture
+from .conftest import (
+    LOGIN_URL,
+    PICKUPS_URL,
+    SEARCH_URL,
+    MockApi,
+    certificate_error,
+    load_fixture,
+)
 
 COMPONENT = Path(__file__).parents[1] / "custom_components/hallingdal_renovasjon"
 D0, D1 = date(2026, 11, 4), date(2027, 2, 2)
@@ -53,9 +61,9 @@ async def test_login_reads_token_from_header(client, mock_api) -> None:
     assert headers["User-Agent"] == USER_AGENT
 
 
-async def test_login_without_token_header_raises_auth_error(client, mock_api) -> None:
+async def test_login_server_error_raises_response_error(client, mock_api) -> None:
     mock_api.login(token=None, status=500)
-    with pytest.raises(ApiAuthError):
+    with pytest.raises(ApiResponseError):
         await client.async_login()
 
 
@@ -137,6 +145,26 @@ async def test_login_connection_error(client, mock_api) -> None:
     mock_api.login_error(aiohttp.ClientConnectorError(None, OSError("dns")))  # type: ignore[arg-type]
     with pytest.raises(ApiConnectionError):
         await client.async_login()
+
+
+async def test_expired_certificate_on_login(client, mock_api) -> None:
+    mock_api.login_error(certificate_error())
+    with pytest.raises(ApiCertificateExpiredError):
+        await client.async_login()
+
+
+async def test_expired_certificate_on_request(client, mock_api) -> None:
+    mock_api.login()
+    mock_api.pickups(exc=certificate_error())
+    with pytest.raises(ApiCertificateExpiredError):
+        await client.async_get_pickups("x", D0, D1)
+
+
+async def test_other_certificate_error_is_plain_connection_error(client, mock_api) -> None:
+    mock_api.login_error(certificate_error(verify_code=62))  # hostname mismatch
+    with pytest.raises(ApiConnectionError) as excinfo:
+        await client.async_login()
+    assert not isinstance(excinfo.value, ApiCertificateExpiredError)
 
 
 async def test_invalid_json_raises_response_error(client, mock_api) -> None:

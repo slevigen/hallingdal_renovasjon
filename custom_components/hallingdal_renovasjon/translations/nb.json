@@ -35,6 +35,7 @@
     },
     "error": {
       "cannot_connect": "Fikk ikke kontakt med Hallingdal Renovasjon. Prøv igjen senere.",
+      "certificate_expired": "Sikkerhetssertifikatet på serveren til Hallingdal Renovasjon er utløpt, så tømmeplanen kan ikke hentes på en sikker måte. Bare Hallingdal Renovasjon kan fornye det. Integrasjonen virker igjen av seg selv når det er gjort.",
       "no_results": "Fant ingen eiendommer. Prøv å søke på bare begynnelsen av gatenavnet, f.eks. «Storg» – registeret kan skrive «veg» der du skriver «vei».",
       "invalid_auth": "Innloggingen ble avvist igjen. Tjenesten kan være nede, eller det uoffisielle API-et kan ha endret seg.",
       "unknown": "Uventet feil. Se loggen for detaljer."
@@ -158,6 +159,9 @@
   "exceptions": {
     "auth_failed": {
       "message": "Hallingdal Renovasjon avviste innloggingen."
+    },
+    "certificate_expired": {
+      "message": "Sikkerhetssertifikatet på serveren til Hallingdal Renovasjon er utløpt, så tømmeplanen kan ikke hentes på en sikker måte. Bare Hallingdal Renovasjon kan fornye det. Integrasjonen virker igjen av seg selv når det er gjort."
     },
     "update_failed": {
       "message": "Kunne ikke hente tømmeplanen: {error}"

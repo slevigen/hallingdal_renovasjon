@@ -23,6 +23,9 @@ _PICKUPS_PATH = "/api/v1/renovasjon/tomminger"
 # An expired or invalid token gives HTTP 500 (not 401).
 _AUTH_RETRY_STATUSES = frozenset({HTTPStatus.UNAUTHORIZED, HTTPStatus.INTERNAL_SERVER_ERROR})
 
+# OpenSSL's X509_V_ERR_CERT_HAS_EXPIRED, from SSLCertVerificationError.verify_code.
+_CERT_HAS_EXPIRED = 10
+
 
 class HallingdalRenovasjonApiError(Exception):
     """Base class for API errors."""
@@ -32,8 +35,12 @@ class ApiConnectionError(HallingdalRenovasjonApiError):
     """Network problem: timeout, DNS, TLS, connection refused."""
 
 
+class ApiCertificateExpiredError(ApiConnectionError):
+    """The server's TLS certificate has expired; only the provider can renew it."""
+
+
 class ApiAuthError(HallingdalRenovasjonApiError):
-    """Login gave no token, or a fresh token was rejected."""
+    """Login answered without a token, or a fresh token was rejected."""
 
 
 class ApiResponseError(HallingdalRenovasjonApiError):
@@ -118,10 +125,14 @@ class HallingdalRenovasjonApiClient:
                 token = response.headers.get("Token")
                 status = response.status
         except (TimeoutError, aiohttp.ClientError) as err:
-            msg = f"Login request failed: {err!r}"
-            raise ApiConnectionError(msg) from err
+            raise _connection_error(f"Login request failed: {err!r}", err) from err
         if not token:
             self._token = None
+            if status >= HTTPStatus.INTERNAL_SERVER_ERROR:
+                # A rejected applikasjonsId and a broken server both give 500. There are
+                # no user credentials to fix, so treat it as an outage and keep retrying.
+                msg = f"Login failed with HTTP {status} (server error)"
+                raise ApiResponseError(msg)
             msg = f"Login gave no token (HTTP {status})"
             raise ApiAuthError(msg)
         self._token = token
@@ -173,8 +184,17 @@ class HallingdalRenovasjonApiClient:
                     msg = f"Invalid JSON from {path}"
                     raise ApiResponseError(msg) from err
         except (TimeoutError, aiohttp.ClientError) as err:
-            msg = f"Request to {path} failed: {err!r}"
-            raise ApiConnectionError(msg) from err
+            raise _connection_error(f"Request to {path} failed: {err!r}", err) from err
+
+
+def _connection_error(msg: str, err: Exception) -> ApiConnectionError:
+    """Pick the expired-certificate subclass when that is why the connection failed."""
+    if (
+        isinstance(err, aiohttp.ClientConnectorCertificateError)
+        and getattr(err.certificate_error, "verify_code", None) == _CERT_HAS_EXPIRED
+    ):
+        return ApiCertificateExpiredError(msg)
+    return ApiConnectionError(msg)
 
 
 def _as_list(data: Any) -> list[Any]:

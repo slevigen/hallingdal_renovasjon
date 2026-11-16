@@ -13,6 +13,7 @@ from homeassistant.util import dt as dt_util
 
 from .api import (
     ApiAuthError,
+    ApiCertificateExpiredError,
     HallingdalRenovasjonApiClient,
     HallingdalRenovasjonApiError,
     Pickup,
@@ -91,6 +92,11 @@ class HallingdalRenovasjonCoordinator(DataUpdateCoordinator[WasteSchedule]):
         except ApiAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="auth_failed"
+            ) from err
+        except ApiCertificateExpiredError as err:
+            LOGGER.debug("Certificate expired: %s", err)
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="certificate_expired"
             ) from err
         except HallingdalRenovasjonApiError as err:
             raise UpdateFailed(

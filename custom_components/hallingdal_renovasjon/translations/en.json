@@ -35,6 +35,7 @@
     },
     "error": {
       "cannot_connect": "Could not connect to Hallingdal Renovasjon. Try again later.",
+      "certificate_expired": "The security certificate on Hallingdal Renovasjon's server has expired, so the collection schedule cannot be fetched securely. Only Hallingdal Renovasjon can renew it. The integration starts working again by itself once they have.",
       "no_results": "No properties found. Try searching for just the beginning of the street name, e.g. “Storg” – the register may spell it “veg” where you write “vei”.",
       "invalid_auth": "The login was rejected again. The service may be down, or the unofficial API may have changed.",
       "unknown": "Unexpected error. See the log for details."
@@ -158,6 +159,9 @@
   "exceptions": {
     "auth_failed": {
       "message": "Hallingdal Renovasjon rejected the login."
+    },
+    "certificate_expired": {
+      "message": "The security certificate on Hallingdal Renovasjon's server has expired, so the collection schedule cannot be fetched securely. Only Hallingdal Renovasjon can renew it. The integration starts working again by itself once they have."
     },
     "update_failed": {
       "message": "Could not fetch the collection schedule: {error}"

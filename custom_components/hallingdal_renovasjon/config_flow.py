@@ -19,6 +19,7 @@ from homeassistant.helpers.selector import (
 
 from .api import (
     ApiAuthError,
+    ApiCertificateExpiredError,
     HallingdalRenovasjonApiClient,
     HallingdalRenovasjonApiError,
     Property,
@@ -99,6 +100,8 @@ class HallingdalRenovasjonConfigFlow(ConfigFlow, domain=DOMAIN):
             address = user_input[CONF_ADDRESS].strip()
             try:
                 found = await self._client().async_search_properties(address)
+            except ApiCertificateExpiredError:
+                errors["base"] = "certificate_expired"
             except HallingdalRenovasjonApiError as err:
                 LOGGER.debug("Address search failed: %s", err)
                 errors["base"] = "cannot_connect"
@@ -176,6 +179,8 @@ class HallingdalRenovasjonConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._client().async_login()
             except ApiAuthError:
                 errors["base"] = "invalid_auth"
+            except ApiCertificateExpiredError:
+                errors["base"] = "certificate_expired"
             except HallingdalRenovasjonApiError:
                 errors["base"] = "cannot_connect"
             else:

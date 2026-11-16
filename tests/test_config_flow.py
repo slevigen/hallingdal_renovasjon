@@ -14,7 +14,14 @@ from custom_components.hallingdal_renovasjon.api import Property
 from custom_components.hallingdal_renovasjon.config_flow import filter_properties, property_label
 from custom_components.hallingdal_renovasjon.const import DOMAIN
 
-from .conftest import ENTRY_DATA, LOGIN_URL, PROPERTY_ID, SEARCH_URL, load_fixture
+from .conftest import (
+    ENTRY_DATA,
+    LOGIN_URL,
+    PROPERTY_ID,
+    SEARCH_URL,
+    certificate_error,
+    load_fixture,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -113,6 +120,12 @@ async def test_network_error(hass: HomeAssistant, mock_api) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_expired_certificate(hass: HomeAssistant, mock_api) -> None:
+    mock_api.login_error(certificate_error())
+    result = await _start(hass)
+    assert result["errors"] == {"base": "certificate_expired"}
+
+
 async def test_server_error_is_cannot_connect(hass: HomeAssistant, mock_api) -> None:
     mock_api.login()
     mock_api.search(status=500)
@@ -206,7 +219,7 @@ async def test_reauth(hass: HomeAssistant, config_entry, mock_api) -> None:
     result = await config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
-    mock_api.login(token=None, status=500)
+    mock_api.login(token=None, status=200)
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -214,6 +227,11 @@ async def test_reauth(hass: HomeAssistant, config_entry, mock_api) -> None:
     mock_api.login_error(TimeoutError())
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_api.reset(LOGIN_URL)
+    mock_api.login_error(certificate_error())
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"] == {"base": "certificate_expired"}
 
     mock_api.reset(LOGIN_URL)
     mock_api.login()

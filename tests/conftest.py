@@ -8,11 +8,13 @@ No test talks to the live service.
 from __future__ import annotations
 
 import json
+import ssl
 from collections import deque
 from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any
 
+import aiohttp
 import pytest
 from pytest_homeassistant_custom_component.test_util.aiohttp import (
     AiohttpClientMocker,
@@ -30,6 +32,13 @@ PICKUPS_URL = f"{BASE}/api/v1/renovasjon/tomminger"
 def load_fixture(name: str) -> Any:
     """Load a JSON fixture (anonymised live responses, see docs/api.md)."""
     return json.loads((FIXTURES / name).read_text(encoding="utf-8"))
+
+
+def certificate_error(verify_code: int = 10) -> aiohttp.ClientConnectorCertificateError:
+    """Build aiohttp's TLS verification error; OpenSSL code 10 means expired."""
+    cause = ssl.SSLCertVerificationError(1, "certificate verify failed")
+    cause.verify_code = verify_code
+    return aiohttp.ClientConnectorCertificateError(None, cause)  # type: ignore[arg-type]
 
 
 class MockApi:

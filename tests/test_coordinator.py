@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.hallingdal_renovasjon.api import Pickup
 
-from .conftest import PICKUPS_URL, PROPERTY_ID, load_fixture
+from .conftest import PICKUPS_URL, PROPERTY_ID, certificate_error, load_fixture
 
 pytestmark = pytest.mark.usefixtures("oslo_tz")
 
@@ -106,6 +106,17 @@ async def test_connection_error_gives_update_failed(
     await coordinator.async_refresh()
     assert not coordinator.last_update_success
     assert coordinator.data is previous  # old data is kept
+
+
+async def test_expired_certificate_explains_itself(
+    hass: HomeAssistant, config_entry, mock_api
+) -> None:
+    mock_api.login_error(certificate_error())
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "certificate_expired"
+    assert "certificate" in config_entry.reason
+    assert "has expired" in config_entry.reason
 
 
 async def test_auth_error_starts_reauth(
