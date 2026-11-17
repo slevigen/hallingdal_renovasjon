@@ -24,6 +24,7 @@ const ASSET_VERSION = new URL(import.meta.url).searchParams.get("v") || "";
 const NEXT_KEY = "neste_henting";
 const LAYOUTS = ["list", "tiles", "next", "dates"];
 const DATES_DEFAULT_MAX = 6;
+const PROBLEM_RECHECK_MS = 5 * 60 * 1000;
 
 const FRACTIONS = {
   restavfall: { color: "#141414", nb: "Restavfall", en: "Residual waste" },
@@ -44,6 +45,11 @@ const STRINGS = {
     none: "Ingen planlagt",
     no_device: "Fant ingen eiendom fra Hallingdal Renovasjon. Legg til integrasjonen først.",
     unavailable: "Utilgjengelig",
+    problem: {
+      certificate_expired:
+        "Sikkerhetssertifikatet på serveren til Hallingdal Renovasjon er utløpt, så tømmeplanen kan ikke hentes. Bare Hallingdal Renovasjon kan fornye det. Kortet virker igjen av seg selv når det er gjort.",
+      other: "Får ikke hentet tømmeplanen fra Hallingdal Renovasjon akkurat nå. Integrasjonen prøver igjen av seg selv.",
+    },
     card_name: "Hallingdal Renovasjon",
     card_description: "Tømmeplan med de offisielle sorteringsmerkene.",
     editor: {
@@ -82,6 +88,11 @@ const STRINGS = {
     none: "Not scheduled",
     no_device: "No Hallingdal Renovasjon property found. Add the integration first.",
     unavailable: "Unavailable",
+    problem: {
+      certificate_expired:
+        "The security certificate on Hallingdal Renovasjon's server has expired, so the collection schedule cannot be fetched. Only Hallingdal Renovasjon can renew it. The card starts working again by itself once they have.",
+      other: "Cannot fetch the collection schedule from Hallingdal Renovasjon right now. The integration keeps trying by itself.",
+    },
     card_name: "Hallingdal Renovasjon",
     card_description: "Waste collection schedule with the official sorting pictograms.",
     editor: {
@@ -236,6 +247,37 @@ class HallingdalRenovasjonCard extends HTMLElement {
     return { items, deviceName, calendarId };
   }
 
+  /**
+   * Ask the integration why there is no data. Sensor states only say
+   * "unavailable"; the reason lives on the config entry, which non-admin users
+   * cannot read, so the integration has its own command for it.
+   */
+  _checkProblem(deviceId) {
+    const now = Date.now();
+    if (this._problemFor === deviceId && now - this._problemAt < PROBLEM_RECHECK_MS) return;
+    if (this._problemFor !== deviceId) this._problem = undefined;
+    this._problemFor = deviceId;
+    this._problemAt = now;
+    if (typeof this._hass.callWS !== "function") return;
+    const done = (problem) => {
+      if (this._problemFor !== deviceId) return;
+      this._problem = problem;
+      this._render();
+    };
+    this._hass
+      .callWS({ type: `${DOMAIN}/status`, device_id: deviceId })
+      .then((result) => done(result?.problem || null))
+      .catch(() => done(null)); // older integration without the command
+  }
+
+  _notice() {
+    const texts = this._t().problem;
+    const text = texts[this._problem] || texts.other;
+    return `<div class="notice" role="status">
+      <ha-icon icon="mdi:alert-circle-outline"></ha-icon><span>${escapeHtml(text)}</span>
+    </div>`;
+  }
+
   _select(items, limit = true) {
     const cfg = this._config;
     let out = items;
@@ -326,11 +368,16 @@ class HallingdalRenovasjonCard extends HTMLElement {
     const selected = this._select(items, !dates);
     const groups = dates ? this._groups(selected) : null;
     this._items = groups || selected;
+    // Every sensor unavailable means the integration has no data at all.
+    const down = selected.length > 0 && selected.every((i) => i.unavailable);
+    if (down) this._checkProblem(deviceId);
+    else this._problemFor = undefined;
     const signature = JSON.stringify([
       this._config,
       langOf(this._hass, this._config),
       deviceName,
       calendarId,
+      down && (this._problem || "other"),
       localToday().getTime(),
       selected.map((i) => [i.entityId, i.date?.getTime(), i.days, i.unavailable, i.name, i.upcoming]),
     ]);
@@ -340,7 +387,8 @@ class HallingdalRenovasjonCard extends HTMLElement {
     const title = this._config.show_title === false ? "" : this._config.title || deviceName;
     const header = title ? `<h1 class="title">${escapeHtml(title)}</h1>` : "";
     let body;
-    if (!selected.length || (groups && !groups.length)) body = `<div class="empty">${escapeHtml(t.none)}</div>`;
+    if (down) body = this._notice();
+    else if (!selected.length || (groups && !groups.length)) body = `<div class="empty">${escapeHtml(t.none)}</div>`;
     else if (groups) body = this._dates(groups, calendarId);
     else if (this._config.layout === "tiles") body = this._tiles(selected);
     else if (this._config.layout === "next") body = this._next(selected);
@@ -495,6 +543,10 @@ const STYLE = `
   .title { margin: 0 0 12px; font-size: var(--ha-card-header-font-size, 20px); font-weight: 500;
            color: var(--ha-card-header-color, var(--primary-text-color)); line-height: 1.3; }
   .empty { color: var(--secondary-text-color); padding: 8px 0; }
+  .notice { display: flex; gap: var(--gap); align-items: flex-start; padding: 12px; border-radius: 10px;
+            line-height: 1.4; color: var(--primary-text-color);
+            background: color-mix(in srgb, var(--warning-color, #ffa600) 14%, transparent); }
+  .notice ha-icon { flex: none; color: var(--warning-color, #ffa600); }
   .sub { color: var(--secondary-text-color); font-size: 13px; }
   .name { color: var(--primary-text-color); font-weight: 500; }
   .pic { display: block; border-radius: 4px; flex: none; }

@@ -94,6 +94,9 @@ Alle valgene kan også settes i kortets visuelle redigering.
 
 Trykk på en rad for å åpne sensoren. I `dates` åpner raden kalenderen.
 
+Får ikke integrasjonen hentet tømmeplanen, viser kortet en forklaring i stedet for radene –
+for eksempel at sikkerhetssertifikatet på serveren til Hallingdal Renovasjon er utløpt.
+
 Sorteringsmerkene er brukt med tillatelse.
 
 ## Eksempel: varsel kvelden før
