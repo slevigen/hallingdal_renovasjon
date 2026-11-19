@@ -111,10 +111,20 @@ async def test_401_triggers_relogin_and_retry(client, mock_api) -> None:
     assert _tokens_sent(mock_api, PICKUPS_URL) == ["old", "new"]
 
 
-async def test_500_twice_raises_auth_error(client, mock_api) -> None:
+async def test_500_twice_is_a_server_error(client, mock_api) -> None:
+    """A fresh token that still gives 500 means an outage, not a rejected login."""
     mock_api.login("one")
     mock_api.login("two")
     mock_api.search(status=500)
+    with pytest.raises(ApiResponseError):
+        await client.async_search_properties("Testveien 1")
+    assert len(mock_api.calls(SEARCH_URL)) == 2
+
+
+async def test_401_twice_raises_auth_error(client, mock_api) -> None:
+    mock_api.login("one")
+    mock_api.login("two")
+    mock_api.search(status=401)
     with pytest.raises(ApiAuthError):
         await client.async_search_properties("Testveien 1")
     assert len(mock_api.calls(SEARCH_URL)) == 2

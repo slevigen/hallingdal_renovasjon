@@ -20,7 +20,7 @@ _LOGIN_PATH = "/api/v1/renovasjon/login"
 _PROPERTIES_PATH = "/api/v1/renovasjon/eiendommer"
 _PICKUPS_PATH = "/api/v1/renovasjon/tomminger"
 
-# An expired or invalid token gives HTTP 500 (not 401).
+# An expired or invalid token gives HTTP 500 (not 401), so both trigger one re-login.
 _AUTH_RETRY_STATUSES = frozenset({HTTPStatus.UNAUTHORIZED, HTTPStatus.INTERNAL_SERVER_ERROR})
 
 # OpenSSL's X509_V_ERR_CERT_HAS_EXPIRED, from SSLCertVerificationError.verify_code.
@@ -40,7 +40,7 @@ class ApiCertificateExpiredError(ApiConnectionError):
 
 
 class ApiAuthError(HallingdalRenovasjonApiError):
-    """Login answered without a token, or a fresh token was rejected."""
+    """Login answered without a token, or a fresh token was rejected with 401."""
 
 
 class ApiResponseError(HallingdalRenovasjonApiError):
@@ -158,9 +158,11 @@ class HallingdalRenovasjonApiClient:
         if status in _AUTH_RETRY_STATUSES:
             token = await self._refresh_token(token)
             status, data = await self._get(path, params, token)
-            if status in _AUTH_RETRY_STATUSES:
+            if status == HTTPStatus.UNAUTHORIZED:
                 msg = f"Request to {path} rejected after re-login (HTTP {status})"
                 raise ApiAuthError(msg)
+            # A 500 with a fresh token is a broken server, not a rejected login: it
+            # falls through to ApiResponseError so polling continues by itself.
         if status != HTTPStatus.OK:
             msg = f"Unexpected HTTP {status} from {path}"
             raise ApiResponseError(msg)

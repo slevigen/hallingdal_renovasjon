@@ -151,7 +151,10 @@ uses that name and falls back to the static table in `const.py`, then to
 | Unknown path / missing param    | `404`, JSON `{"message": ...}` |
 
 So an expired token is indistinguishable from a server error – both are `500`.
-The client re-logs in once on `500`/`401` and retries.
+The client re-logs in once on `500`/`401` and retries. A second `500` with the
+fresh token is treated as an outage (polling continues); only a second `401`
+counts as rejected and starts reauth, which would otherwise stop polling until
+the user confirms it.
 
 A `500` on the login itself is treated as an outage (retried), not as rejected
 credentials: on 2026-11-16 the service answered every login with `500`

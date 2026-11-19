@@ -123,12 +123,29 @@ async def test_auth_error_starts_reauth(
     hass: HomeAssistant, config_entry, coordinator, mock_api
 ) -> None:
     mock_api.reset(PICKUPS_URL)
-    mock_api.pickups(status=500)
+    mock_api.pickups(status=401)
     await coordinator.async_refresh()
     await hass.async_block_till_done()
     assert not coordinator.last_update_success
     flows = hass.config_entries.flow.async_progress_by_handler("hallingdal_renovasjon")
     assert [f["context"]["source"] for f in flows] == ["reauth"]
+
+
+async def test_server_error_keeps_polling(
+    hass: HomeAssistant, config_entry, coordinator, mock_api
+) -> None:
+    """Repeated HTTP 500 must not end in reauth, which stops polling until the user acts."""
+    mock_api.reset(PICKUPS_URL)
+    mock_api.pickups(status=500)
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    assert not coordinator.last_update_success
+    assert not hass.config_entries.flow.async_progress_by_handler("hallingdal_renovasjon")
+
+    mock_api.reset(PICKUPS_URL)
+    mock_api.pickups(load_fixture("tomminger.json"))
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success
 
 
 async def test_first_refresh_failure_retries_setup(
