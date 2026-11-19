@@ -9,7 +9,7 @@ license = "MIT"
 dev = [
   "pytest-homeassistant-custom-component==0.13.375",
   "home-assistant-frontend==20260930.5",  # frontend is a dependency of the integration
-  "aioresponses==0.7.9",
+  "pillow",  # scripts/build_images.py
   "ruff",
   "mypy",
 ]
@@ -64,7 +64,4 @@ known-first-party = ["custom_components.hallingdal_renovasjon"]
 [tool.mypy]
 python_version = "3.14"
 strict = true
-files = [
-  "custom_components/hallingdal_renovasjon/api.py",
-  "custom_components/hallingdal_renovasjon/coordinator.py",
-]
+files = ["custom_components/hallingdal_renovasjon"]

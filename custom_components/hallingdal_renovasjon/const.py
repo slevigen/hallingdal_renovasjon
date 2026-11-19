@@ -13,7 +13,7 @@ from typing import Final
 DOMAIN: Final = "hallingdal_renovasjon"
 LOGGER: Final = logging.getLogger(__package__)
 
-# Keep in sync with manifest.json (checked by tests).
+# Keep in sync with manifest.json and pyproject.toml (checked by tests).
 VERSION: Final = "0.3.2"
 REPO_URL: Final = "https://github.com/slevigen/hallingdal_renovasjon"
 IMAGES_URL: Final = f"/{DOMAIN}/images"  # fraction pictures served by the integration

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import tomllib
 from collections.abc import AsyncIterator
 from datetime import date
 from pathlib import Path
@@ -262,9 +263,11 @@ async def test_concurrent_expiry_relogs_in_once(client, mock_api) -> None:
     assert len(mock_api.calls(LOGIN_URL)) == 1
 
 
-def test_version_matches_manifest() -> None:
+def test_version_matches_manifest_and_pyproject() -> None:
     manifest = json.loads((COMPONENT / "manifest.json").read_text())
     assert manifest["version"] == VERSION
+    pyproject = tomllib.loads((COMPONENT.parents[1] / "pyproject.toml").read_text())
+    assert pyproject["project"]["version"] == VERSION
 
 
 def test_api_and_const_have_no_homeassistant_imports() -> None:
