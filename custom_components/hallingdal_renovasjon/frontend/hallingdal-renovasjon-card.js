@@ -15,7 +15,7 @@
  *   date_format: both | relative | date  (default: both)
  *   highlight_days: 1                    (highlight pickups within N days, 0 = off)
  *   max_items: <optional>                (dates: number of days, default 6)
- *   language: auto | nb | en             (default: auto, follows Home Assistant)
+ *   language: auto | nb | nn | en        (default: auto, follows Home Assistant)
  */
 
 const DOMAIN = "hallingdal_renovasjon";
@@ -26,13 +26,22 @@ const LAYOUTS = ["list", "tiles", "next", "dates"];
 const DATES_DEFAULT_MAX = 6;
 const PROBLEM_RECHECK_MS = 5 * 60 * 1000;
 
+// `color` is the official fraction colour. Restavfall's near-black disappears on a
+// dark card, so its highlight follows the theme's text colour instead (`themed`).
 const FRACTIONS = {
-  restavfall: { color: "#141414", nb: "Restavfall", en: "Residual waste" },
-  matavfall: { color: "#00A04B", nb: "Matavfall", en: "Food waste" },
-  papir: { color: "#0082BE", nb: "Papir og papp", en: "Paper and cardboard" },
-  plast: { color: "#961E82", nb: "Plastemballasje", en: "Plastic packaging" },
-  glass_metall: { color: "#1CA68D", nb: "Glass- og metallemballasje", en: "Glass and metal packaging" },
+  restavfall: { color: "#141414", themed: true, nb: "Restavfall", nn: "Restavfall", en: "Residual waste" },
+  matavfall: { color: "#00A04B", nb: "Matavfall", nn: "Matavfall", en: "Food waste" },
+  papir: { color: "#0082BE", nb: "Papir og papp", nn: "Papir og papp", en: "Paper and cardboard" },
+  plast: { color: "#961E82", nb: "Plastemballasje", nn: "Plastemballasje", en: "Plastic packaging" },
+  glass_metall: {
+    color: "#1CA68D",
+    nb: "Glass- og metallemballasje",
+    nn: "Glass- og metallemballasje",
+    en: "Glass and metal packaging",
+  },
 };
+const THEMED_ACCENT =
+  "--accent:var(--primary-text-color);--on-accent:var(--card-background-color, var(--ha-card-background, #fff))";
 const PAIRS = new Set(["papir", "glass_metall"]);
 
 const STRINGS = {
@@ -48,6 +57,8 @@ const STRINGS = {
     problem: {
       certificate_expired:
         "Sikkerhetssertifikatet på serveren til Hallingdal Renovasjon er utløpt, så tømmeplanen kan ikke hentes. Bare Hallingdal Renovasjon kan fornye det. Kortet virker igjen av seg selv når det er gjort.",
+      auth_failed:
+        "Hallingdal Renovasjon avviste innloggingen, og integrasjonen har sluttet å prøve. Åpne Innstillinger → Enheter og tjenester → Hallingdal Renovasjon og bekreft ny innlogging.",
       other: "Får ikke hentet tømmeplanen fra Hallingdal Renovasjon akkurat nå. Integrasjonen prøver igjen av seg selv.",
     },
     card_name: "Hallingdal Renovasjon",
@@ -75,7 +86,54 @@ const STRINGS = {
       relative: "Bare relativ («I morgen»)",
       date_only: "Bare dato",
       auto: "Som Home Assistant",
-      nb: "Norsk",
+      nb: "Norsk bokmål",
+      nn: "Norsk nynorsk",
+      en: "English",
+    },
+  },
+  nn: {
+    today: "I dag",
+    tomorrow: "I morgon",
+    in_days: (n) => `Om ${n} dagar`,
+    next: "Neste henting",
+    then: "Deretter",
+    none: "Ingen planlagd",
+    no_device: "Fann ingen eigedom frå Hallingdal Renovasjon. Legg til integrasjonen først.",
+    unavailable: "Utilgjengeleg",
+    problem: {
+      certificate_expired:
+        "Tryggleikssertifikatet på tenaren til Hallingdal Renovasjon er utgått, så tømmeplanen kan ikkje hentast. Berre Hallingdal Renovasjon kan fornye det. Kortet verkar igjen av seg sjølv når det er gjort.",
+      auth_failed:
+        "Hallingdal Renovasjon avviste innlogginga, og integrasjonen har slutta å prøve. Opne Innstillingar → Einingar og tenester → Hallingdal Renovasjon og stadfest ny innlogging.",
+      other: "Får ikkje henta tømmeplanen frå Hallingdal Renovasjon akkurat no. Integrasjonen prøver igjen av seg sjølv.",
+    },
+    card_name: "Hallingdal Renovasjon",
+    card_description: "Tømmeplan med dei offisielle sorteringsmerka.",
+    editor: {
+      device_id: "Eigedom",
+      layout: "Vising",
+      title: "Tittel (standard: adressa)",
+      show_title: "Vis tittel",
+      fractions: "Avfallstypar (tomt = alle)",
+      sort: "Rekkjefølgje",
+      date_format: "Dato",
+      highlight_days: "Uthev henting innan (dagar)",
+      max_items: "Maks tal på rader",
+      language: "Språk",
+    },
+    options: {
+      list: "Liste",
+      tiles: "Fliser",
+      next: "Neste henting",
+      dates: "Hentedagar",
+      date: "Etter dato",
+      fixed: "Fast rekkjefølgje",
+      both: "Relativ og dato",
+      relative: "Berre relativ («I morgon»)",
+      date_only: "Berre dato",
+      auto: "Som Home Assistant",
+      nb: "Norsk bokmål",
+      nn: "Norsk nynorsk",
       en: "English",
     },
   },
@@ -91,6 +149,8 @@ const STRINGS = {
     problem: {
       certificate_expired:
         "The security certificate on Hallingdal Renovasjon's server has expired, so the collection schedule cannot be fetched. Only Hallingdal Renovasjon can renew it. The card starts working again by itself once they have.",
+      auth_failed:
+        "Hallingdal Renovasjon rejected the login, and the integration has stopped trying. Open Settings → Devices & services → Hallingdal Renovasjon and confirm the new login.",
       other: "Cannot fetch the collection schedule from Hallingdal Renovasjon right now. The integration keeps trying by itself.",
     },
     card_name: "Hallingdal Renovasjon",
@@ -118,7 +178,8 @@ const STRINGS = {
       relative: "Relative only (“Tomorrow”)",
       date_only: "Date only",
       auto: "Same as Home Assistant",
-      nb: "Norsk",
+      nb: "Norsk bokmål",
+      nn: "Norsk nynorsk",
       en: "English",
     },
   },
@@ -135,9 +196,14 @@ const DEFAULTS = {
 
 function langOf(hass, config) {
   const wanted = config?.language && config.language !== "auto" ? config.language : null;
-  if (wanted) return wanted === "nb" ? "nb" : "en";
-  const ha = (hass?.locale?.language || hass?.language || "en").toLowerCase();
-  return /^(nb|nn|no)/.test(ha) ? "nb" : "en";
+  if (wanted) return STRINGS[wanted] ? wanted : "en";
+  return langOfTag(hass?.locale?.language || hass?.language);
+}
+
+function langOfTag(tag) {
+  const lower = (tag || "en").toLowerCase();
+  if (/^nn/.test(lower)) return "nn";
+  return /^(nb|no)/.test(lower) ? "nb" : "en";
 }
 
 function propertyDevices(hass) {
@@ -160,6 +226,31 @@ function localToday() {
 function parseDate(value) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || "");
   return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null;
+}
+
+/**
+ * Today's date in Home Assistant's time zone, as a local-midnight Date like
+ * parseDate gives. The sensors count days there, so a browser in another time
+ * zone must not shift the pickup days around midnight.
+ */
+function haToday(hass) {
+  const timeZone = hass?.config?.time_zone;
+  if (timeZone) {
+    try {
+      const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }).formatToParts(new Date());
+      const part = (type) => parts.find((p) => p.type === type)?.value;
+      const date = parseDate(`${part("year")}-${part("month")}-${part("day")}`);
+      if (date) return date;
+    } catch {
+      // unknown time zone name: use the browser's
+    }
+  }
+  return localToday();
 }
 
 class HallingdalRenovasjonCard extends HTMLElement {
@@ -213,7 +304,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
     const lang = langOf(hass, this._config);
     const device = hass.devices?.[deviceId];
     const deviceName = device?.name_by_user || device?.name || "";
-    const today = localToday();
+    const today = haToday(hass);
     const items = [];
     let calendarId = null;
     for (const entity of Object.values(hass.entities || {})) {
@@ -238,6 +329,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
         entityId: entity.entity_id,
         name,
         color: meta?.color || "var(--secondary-text-color)",
+        themed: Boolean(meta?.themed),
         date,
         days: date ? days : null,
         unavailable: state.state === "unavailable",
@@ -253,26 +345,35 @@ class HallingdalRenovasjonCard extends HTMLElement {
    * cannot read, so the integration has its own command for it.
    */
   _checkProblem(deviceId) {
+    // Without a device (a first setup that keeps failing has none) ask about the first property.
+    const key = deviceId || "";
     const now = Date.now();
-    if (this._problemFor === deviceId && now - this._problemAt < PROBLEM_RECHECK_MS) return;
-    if (this._problemFor !== deviceId) this._problem = undefined;
-    this._problemFor = deviceId;
+    if (this._problemFor === key && now - this._problemAt < PROBLEM_RECHECK_MS) return;
+    // undefined = not answered yet; nothing is shown until the answer is in.
+    if (this._problemFor !== key) this._problem = undefined;
+    this._problemFor = key;
     this._problemAt = now;
-    if (typeof this._hass.callWS !== "function") return;
+    if (typeof this._hass.callWS !== "function") {
+      this._problem = null;
+      return;
+    }
     const done = (problem) => {
-      if (this._problemFor !== deviceId) return;
+      if (this._problemFor !== key) return;
       this._problem = problem;
       this._render();
     };
     this._hass
-      .callWS({ type: `${DOMAIN}/status`, device_id: deviceId })
+      .callWS({ type: `${DOMAIN}/status`, ...(deviceId ? { device_id: deviceId } : {}) })
       .then((result) => done(result?.problem || null))
       .catch(() => done(null)); // older integration without the command
   }
 
-  _notice() {
+  /** Why there is no data; `fallback` covers "no reason given". Empty while still asking. */
+  _notice(fallback = true) {
+    if (this._problem === undefined) return "";
     const texts = this._t().problem;
-    const text = texts[this._problem] || texts.other;
+    const text = texts[this._problem] || (this._problem || fallback ? texts.other : "");
+    if (!text) return "";
     return `<div class="notice" role="status">
       <ha-icon icon="mdi:alert-circle-outline"></ha-icon><span>${escapeHtml(text)}</span>
     </div>`;
@@ -318,8 +419,10 @@ class HallingdalRenovasjonCard extends HTMLElement {
 
   _dateText(date, long = false) {
     if (!date) return "";
-    const locale = langOf(this._hass, this._config) === "nb" ? "nb-NO" : this._hass?.locale?.language || "en";
-    return new Intl.DateTimeFormat(locale, {
+    const lang = langOf(this._hass, this._config);
+    // Not every browser has nynorsk date names; bokmål is the closest fallback.
+    const locales = { nb: ["nb-NO"], nn: ["nn-NO", "nb-NO"] };
+    return new Intl.DateTimeFormat(locales[lang] || this._hass?.locale?.language || "en", {
       weekday: "long",
       day: "numeric",
       month: long ? "long" : "short",
@@ -345,6 +448,11 @@ class HallingdalRenovasjonCard extends HTMLElement {
     return limit > 0 && item.days != null && item.days >= 0 && item.days <= limit;
   }
 
+  /** Inline custom properties for an item's colours. */
+  _vars(item) {
+    return `--fraction:${item.color}${item.themed ? `;${THEMED_ACCENT}` : ""}`;
+  }
+
   _picture(item, cls) {
     if (!item.known) {
       return `<div class="pic ${cls} unknown"><ha-icon icon="mdi:trash-can-outline"></ha-icon></div>`;
@@ -360,7 +468,13 @@ class HallingdalRenovasjonCard extends HTMLElement {
     const t = this._t();
     const deviceId = this._deviceId();
     if (!deviceId) {
-      this._paint(`<div class="empty">${escapeHtml(t.no_device)}</div>`, "no-device");
+      this._checkProblem(undefined);
+      const body =
+        this._problem === undefined ? "" : this._notice(false) || `<div class="empty">${escapeHtml(t.no_device)}</div>`;
+      const signature = JSON.stringify(["no-device", langOf(this._hass, this._config), body]);
+      if (signature === this._signature) return;
+      this._signature = signature;
+      this._paint(body, "no-device");
       return;
     }
     const { items, deviceName, calendarId } = this._collect();
@@ -372,13 +486,14 @@ class HallingdalRenovasjonCard extends HTMLElement {
     const down = selected.length > 0 && selected.every((i) => i.unavailable);
     if (down) this._checkProblem(deviceId);
     else this._problemFor = undefined;
+    const today = haToday(this._hass);
     const signature = JSON.stringify([
       this._config,
       langOf(this._hass, this._config),
       deviceName,
       calendarId,
-      down && (this._problem || "other"),
-      localToday().getTime(),
+      down && (this._problem === undefined ? "pending" : this._problem || "other"),
+      today.getTime(),
       selected.map((i) => [i.entityId, i.date?.getTime(), i.days, i.unavailable, i.name, i.upcoming]),
     ]);
     if (signature === this._signature) return;
@@ -401,7 +516,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
       .map((item) => {
         const [primary, secondary] = this._when(item);
         const soon = this._soon(item) ? " soon" : "";
-        return `<button class="row${soon}" data-entity="${item.entityId}" style="--fraction:${item.color}">
+        return `<button class="row${soon}" data-entity="${item.entityId}" style="${this._vars(item)}">
           <span class="pics">${this._picture(item, "small")}</span>
           <span class="text">
             <span class="name">${escapeHtml(item.name)}</span>
@@ -418,7 +533,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
       .map((item) => {
         const [primary, secondary] = this._when(item);
         const soon = this._soon(item) ? " soon" : "";
-        return `<button class="tile${soon}" data-entity="${item.entityId}" style="--fraction:${item.color}">
+        return `<button class="tile${soon}" data-entity="${item.entityId}" style="${this._vars(item)}">
           ${this._picture(item, "large")}
           <span class="name">${escapeHtml(item.name)}</span>
           <span class="when">${escapeHtml(primary)}</span>
@@ -441,7 +556,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
     const date = this._dateText(lead.date, true);
     const big = this._config.date_format === "date" ? date : rel;
     const small = this._config.date_format === "both" ? date : "";
-    const hero = `<div class="hero${soon}" style="--fraction:${lead.color}">
+    const hero = `<div class="hero${soon}" style="${this._vars(lead)}">
       <div class="label">${escapeHtml(t.next)}</div>
       <div class="big">${escapeHtml(big)}</div>
       ${small ? `<div class="sub">${escapeHtml(small)}</div>` : ""}
@@ -459,7 +574,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
       .map((item) => {
         const [primary, secondary] = this._when(item);
         const soon = this._soon(item) ? " soon" : "";
-        return `<button class="crow${soon}" data-entity="${item.entityId}" style="--fraction:${item.color}">
+        return `<button class="crow${soon}" data-entity="${item.entityId}" style="${this._vars(item)}">
           <span class="pics">${this._picture(item, "tiny")}</span>
           <span class="text">
             <span class="name">${escapeHtml(item.name)}</span>
@@ -478,7 +593,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
    * a day never lacks a fraction that is in fact collected then.
    */
   _groups(items) {
-    const today = localToday().getTime();
+    const today = haToday(this._hass).getTime();
     const byDay = new Map();
     for (const item of items) {
       if (item.unavailable) continue;
@@ -505,7 +620,7 @@ class HallingdalRenovasjonCard extends HTMLElement {
         const soon = this._soon(group) ? " soon" : "";
         const target = calendarId ? ` data-entity="${calendarId}"` : "";
         const names = group.items.map((i) => i.name).join(", ");
-        return `<button class="drow${soon}"${target} style="--fraction:${group.items[0].color}">
+        return `<button class="drow${soon}"${target} style="${this._vars(group.items[0])}">
           <span class="dhead">
             <span class="dwhen">${escapeHtml(primary)}</span>
             ${secondary ? `<span class="sub">${escapeHtml(secondary)}</span>` : ""}
@@ -567,8 +682,8 @@ const STYLE = `
   .row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .chip { flex: none; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 500;
           background: var(--secondary-background-color); color: var(--secondary-text-color); white-space: nowrap; }
-  .soon .chip { background: var(--fraction); color: #fff; }
-  .row.soon { background: color-mix(in srgb, var(--fraction) 10%, transparent); }
+  .soon .chip { background: var(--accent, var(--fraction)); color: var(--on-accent, #fff); }
+  .row.soon { background: color-mix(in srgb, var(--accent, var(--fraction)) 10%, transparent); }
 
   /* tiles */
   .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: var(--gap); }
@@ -577,12 +692,13 @@ const STYLE = `
   .tile .pic { margin-bottom: 6px; }
   .tile .name { font-size: 13px; line-height: 1.25; min-height: 2.5em; display: flex; align-items: center; }
   .tile .when { font-size: 18px; font-weight: 600; color: var(--primary-text-color); }
-  .tile.soon { border: 2px solid var(--fraction); background: color-mix(in srgb, var(--fraction) 8%, transparent); }
-  .tile.soon .when { color: var(--fraction); }
+  .tile.soon { border: 2px solid var(--accent, var(--fraction));
+               background: color-mix(in srgb, var(--accent, var(--fraction)) 8%, transparent); }
+  .tile.soon .when { color: var(--accent, var(--fraction)); }
 
   /* next */
   .hero { padding: 16px; border-radius: 14px; background: var(--secondary-background-color); }
-  .hero.soon { background: color-mix(in srgb, var(--fraction) 14%, var(--card-background-color, #fff)); }
+  .hero.soon { background: color-mix(in srgb, var(--accent, var(--fraction)) 14%, var(--card-background-color, #fff)); }
   .label { text-transform: uppercase; letter-spacing: .06em; font-size: 12px; font-weight: 600;
            color: var(--secondary-text-color); }
   .big { font-size: 32px; font-weight: 600; line-height: 1.15; margin-top: 4px; color: var(--primary-text-color); }
@@ -601,10 +717,10 @@ const STYLE = `
   .dates { display: flex; flex-direction: column; gap: 4px; }
   .drow { display: flex; flex-direction: column; gap: 6px; padding: 8px; margin: 0 -8px; border-radius: 10px; }
   .drow:hover { background: var(--secondary-background-color); }
-  .drow.soon { background: color-mix(in srgb, var(--fraction) 10%, transparent); }
+  .drow.soon { background: color-mix(in srgb, var(--accent, var(--fraction)) 10%, transparent); }
   .dhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .dwhen { font-weight: 600; color: var(--primary-text-color); }
-  .drow.soon .dwhen { color: var(--fraction); }
+  .drow.soon .dwhen { color: var(--accent, var(--fraction)); }
   .dbody { display: flex; align-items: center; gap: var(--gap); }
   .dpics { display: flex; flex-wrap: wrap; gap: 6px; flex: none; max-width: 70%; }
   .dnames { color: var(--primary-text-color); min-width: 0; flex: 1; line-height: 1.3; }
@@ -663,7 +779,7 @@ class HallingdalRenovasjonCardEditor extends HTMLElement {
           { name: "max_items", selector: { number: { min: 1, max: 20, mode: "box" } } },
           {
             name: "language",
-            selector: { select: { mode: "dropdown", options: opt([["auto"], ["nb"], ["en"]]) } },
+            selector: { select: { mode: "dropdown", options: opt([["auto"], ["nb"], ["nn"], ["en"]]) } },
           },
         ],
       },
@@ -672,7 +788,7 @@ class HallingdalRenovasjonCardEditor extends HTMLElement {
 
   _update() {
     if (!this._hass || !this._config) return;
-    const t = STRINGS[langOf(this._hass, this._config)];
+    const lang = langOf(this._hass, this._config);
     if (!this._form) {
       this._form = document.createElement("ha-form");
       this._form.computeLabel = (field) => this._labels?.[field.name] ?? field.name;
@@ -686,10 +802,18 @@ class HallingdalRenovasjonCardEditor extends HTMLElement {
       });
       this.appendChild(this._form);
     }
-    this._labels = t.editor;
     this._form.hass = this._hass;
-    this._form.schema = this._schema(t);
-    this._form.data = { ...DEFAULTS, ...this._config };
+    // `hass` is set on every state change anywhere. Hand the form a new schema or
+    // new data only when they changed, or it re-renders while the user is typing.
+    if (this._schemaLang !== lang) {
+      this._schemaLang = lang;
+      this._labels = STRINGS[lang].editor;
+      this._form.schema = this._schema(STRINGS[lang]);
+    }
+    if (this._dataFor !== this._config) {
+      this._dataFor = this._config;
+      this._form.data = { ...DEFAULTS, ...this._config };
+    }
   }
 }
 
@@ -697,7 +821,7 @@ if (!customElements.get(CARD)) {
   customElements.define(CARD, HallingdalRenovasjonCard);
   customElements.define(`${CARD}-editor`, HallingdalRenovasjonCardEditor);
   window.customCards = window.customCards || [];
-  const t = STRINGS[/^(nb|nn|no)/i.test(navigator.language) ? "nb" : "en"];
+  const t = STRINGS[langOfTag(navigator.language)];
   window.customCards.push({
     type: CARD,
     name: t.card_name,

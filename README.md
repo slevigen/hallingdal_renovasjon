@@ -90,7 +90,7 @@ Alle valgene kan også settes i kortets visuelle redigering.
 | `date_format` | `both` | `both` («I morgen» og dato), `relative` eller `date` |
 | `highlight_days` | `1` | Uthev tømminger innen så mange dager; `0` slår av |
 | `max_items` | ingen | Maks antall avfallstyper. For `dates`: antall hentedager (standard 6). |
-| `language` | `auto` | `auto` (som Home Assistant), `nb` eller `en` |
+| `language` | `auto` | `auto` (som Home Assistant), `nb` (bokmål), `nn` (nynorsk) eller `en` |
 
 Trykk på en rad for å åpne sensoren. I `dates` åpner raden kalenderen.
 
