@@ -107,6 +107,13 @@ async def test_no_results(hass: HomeAssistant, mock_api) -> None:
     assert result["step_id"] == "property"
 
 
+async def test_blank_address_is_not_searched(hass: HomeAssistant, mock_api) -> None:
+    result = await _start(hass, " ")
+    assert result["errors"] == {"base": "no_results"}
+    assert not mock_api.calls(LOGIN_URL)
+    assert not mock_api.calls(SEARCH_URL)
+
+
 async def test_only_out_of_area_results_is_no_results(hass: HomeAssistant, mock_api) -> None:
     mock_api.login()
     mock_api.search([load_fixture("eiendommer_multiple.json")[-1]])
@@ -161,6 +168,8 @@ async def test_reconfigure_switches_property(
     mock_api.search(load_fixture("eiendommer_multiple.json"))
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["step_id"] == "reconfigure"
+    (key,) = result["data_schema"].schema
+    assert key.description == {"suggested_value": "Testveien 1"}  # the current address
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"address": "Testveien"}
     )
@@ -232,6 +241,14 @@ async def test_reauth(hass: HomeAssistant, config_entry, mock_api) -> None:
     mock_api.login_error(certificate_error())
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["errors"] == {"base": "certificate_expired"}
+
+    with patch(
+        "custom_components.hallingdal_renovasjon.config_flow."
+        "HallingdalRenovasjonApiClient.async_login",
+        side_effect=RuntimeError,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"] == {"base": "unknown"}
 
     mock_api.reset(LOGIN_URL)
     mock_api.login()

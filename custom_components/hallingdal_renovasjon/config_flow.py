@@ -99,7 +99,8 @@ class HallingdalRenovasjonConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS].strip()
             try:
-                found = await self._client().async_search_properties(address)
+                # An empty search is never sent: nothing useful can come back.
+                found = await self._client().async_search_properties(address) if address else []
             except ApiCertificateExpiredError:
                 errors["base"] = "certificate_expired"
             except HallingdalRenovasjonApiError as err:
@@ -114,9 +115,15 @@ class HallingdalRenovasjonConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._properties = {p.id: p for p in properties}
                     return await self.async_step_property()
                 errors["base"] = "no_results"
+        suggested = user_input
+        if suggested is None and step_id == "reconfigure":
+            suggested = {CONF_ADDRESS: self._get_reconfigure_entry().data.get(CONF_ADDRESS)}
         return self.async_show_form(
             step_id=step_id,
-            data_schema=self.add_suggested_values_to_schema(ADDRESS_SCHEMA, user_input),
+            data_schema=self.add_suggested_values_to_schema(
+                ADDRESS_SCHEMA,  # type: ignore[arg-type]  # HA's stubs expect probatio
+                suggested,
+            ),
             errors=errors,
         )
 
@@ -158,7 +165,7 @@ class HallingdalRenovasjonConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="property",
-            data_schema=vol.Schema(
+            data_schema=vol.Schema(  # type: ignore[arg-type]
                 {field: SelectSelector(SelectSelectorConfig(options=options, mode=mode))}
             ),
             description_placeholders={"count": str(len(options))},
@@ -183,8 +190,13 @@ class HallingdalRenovasjonConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "certificate_expired"
             except HallingdalRenovasjonApiError:
                 errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001 - config flows must not crash on surprises
+                LOGGER.exception("Unexpected error during reauth")
+                errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(self._get_reauth_entry())
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=vol.Schema({}), errors=errors
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({}),  # type: ignore[arg-type]
+            errors=errors,
         )
